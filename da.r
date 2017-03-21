@@ -1,5 +1,6 @@
 #!/usr/bin/env Rscript
 require(ggplot2)
+library(ggplot2)
 # require(plyr)
 # Read in data
 data <- read.csv("datafile.csv")
@@ -164,3 +165,12 @@ hist(mapa_geom_err$ma, breaks = 20)
 
 # boxplot anova
 
+ggplot(data, aes(x=f.time, y=t.time)) + geom_point(size=1, shape=1, color="steelblue", stroke=1)
+ggplot(data, aes(x=f.time)) + geom_histogram(size=2, fill=3, color="red", binwidth = 1) + geom_density(kernel="gaussian")
+ggplot(data, aes(f.time)) + geom_density(size=1, fill=3, color="red") + geom_density(kernel="gaussian") + labs(title="Density plot")  # Density plot
+ggplot(mapa, aes(x=age)) + geom_bar()
+
+ggplot(mapa, aes(x=f.time)) +
+  geom_histogram(aes(y=..density..), alpha=0.5,position='identity',binwidth=0.5) +
+  geom_density(aes(y=..density..,position="stack")) +
+  stat_function(fun = dnorm, args = list(mean = mean_mapa_loc_time, sd = sd_mapa_loc_time))
