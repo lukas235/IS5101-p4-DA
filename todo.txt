@@ -1,0 +1,94 @@
+- calculate as much meaningful information as you can about the dataset
+- write a report detailing and justifying the conclusions you have extracted
+ - section: comprehensive description of the dataset
+- indicate & justify whether you accept or reject each of the provided hypotheses
+ -> BUT analysis should not be limited to them
+ 
+- consider including visualisations
+- make reasonable assumptions
+
+- indicate as concisely as possible any information you can statistically justify about the dataset & which is genuinely useful or interesting (to the researchers)
+- you can include negative conclusions i.e. lack of relationship you might have expected, as long as useful
+
+
+
+More hypos?
+
+Calculate
+1. Dataset
+X number of participants
+X m/f
+X age mean + std dev
+X nationalities total count
+X avg. inputted faults separate in A and B -> faults per minute ...
+
+Rows & Cols
+what do the different cols do
+(how were the values computed, if interesting)
+
+2. Hypotheses
+X time std-dev & mean locate fault
+X time std-dev & mean type fault descr
+X> t-test
+X> f-test
+
+X fit with normal dist
+
+
+3. Extended
+ a) ggplot
+ b) find significant (ggf. anova) difference between rporting error rates
+ c) find significant difference in text typing error rates
+ ---
+ d) find correlations
+  - age-accuracy/speed...
+  - nationality
+  - m/f
+  - learning effect
+  - speed and correctness
+
+
+
+ 
+Hyp: MapA is more precise than MapB in terms of finding the location
+Hyp: There is no difference in the precision when typing text
+
+
+
+
+
+regressions
+relationships: correlation
+t-tests/F-test
+
+
+t-test:
+as we cannot assume a-priori that one condition is better than the other, we will run a 2-tailed test
+
+
+# Investigate the effect of age on survival
+> t.test( subset(data, Survived == 1)$Age, subset(data, Survived == 0)$Age )
+
+> # Ratio of men vs. women who survived?
+> nrow( subset(data, Sex=="male" & Survived == 1) )
+[1] 109
+
+> nrow( subset(data, Sex=="female" & Survived == 1 ) )
+[1] 233
+
+> nrow( subset(data, Sex=="male" & Survived == 1) ) / nrow( subset(data, Survived == 1) )
+[1] 0.3187135
+
+> nrow( subset(data, Sex=="female" & Survived == 1) ) / nrow( subset(data, Survived == 1) )
+[1] 0.6812865
+
+
+
+
+
+Questions:
+1. does it make sense to comapare groupsindividually 1before2 &vv
+2. do we have to describe the experiment?
+
+
+
