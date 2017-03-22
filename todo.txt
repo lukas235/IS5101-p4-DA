@@ -15,7 +15,7 @@
 More hypos?
 
 Calculate
-1. Dataset
+X 1. Dataset
 X number of participants
 X m/f
 X age mean + std dev
@@ -26,7 +26,7 @@ Rows & Cols
 what do the different cols do
 (how were the values computed, if interesting)
 
-2. Hypotheses
+X 2. Hypotheses
 X time std-dev & mean locate fault
 X time std-dev & mean type fault descr
 X> t-test
@@ -38,7 +38,7 @@ X fit with normal dist
 3. Extended
  X) ggplot
  X) find significant difference between reporting error rates
- c) find significant difference in text typing error rates
+ X) find significant difference in text typing error rates
  ---
  d) find correlations
   - age-accuracy/speed...
@@ -48,6 +48,7 @@ X fit with normal dist
   - speed and correctness
 
 4. If still time:
+ - Try Anova with diff hypos
 
 
 

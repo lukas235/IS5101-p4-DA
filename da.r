@@ -7,12 +7,19 @@ library(ggplot2)
 library(stringdist)
 library(stringi)
 
+# 1-10: MapA MapB
+# 11-20: MapB MapA
+learned <- function(pid, map){
+  return ((pid <= 10 & map == "MapB")|(pid >10 & map == "MapA"))
+}
+
 # require(plyr)
 # Read in data
 data <- read.csv("datafile.csv")
 
 data["loc.err"] <- sqrt((data$lat-data$correct.lat)^2 + (data$long-data$correct.long)^2)
 data["dist"] <- stringdist(data$text, data$correct.text, method="lv") / stri_length(data$correct.text)
+data["learned"] <- learned(data$pid, data$map)
 
 n <- max(data$pid)
 
@@ -203,4 +210,67 @@ ggplot(data, aes(x=dist)) +
 
 t.test(mapa$dist, mapb$dist)
 var.test(mapa$dist, mapb$dist)
+
+# Correlations between time and error
+ggplot(data, aes(x=f.time, y=loc.err)) +
+  geom_point(aes(group=map,colour=map,fill=map), alpha=0.5)
+
+ggplot(data, aes(x=t.time, y=dist)) +
+  geom_point(aes(group=map,colour=map,fill=map), alpha=0.5)
+
+cor(data$f.time, data$loc.err)
+cor(data$t.time, data$dist)
+cor.test(data$f.time, data$loc.err, alternative="two.sided")
+
+# Correlation between age and error rate
+ggplot(data, aes(x=age, y=loc.err)) +
+  geom_point(aes(group=map,colour=map,fill=map), alpha=0.5)
+
+cor(data$age, data$loc.err)
+cor(data$age, data$dist)
+
+cor(data$age, data$t.time)
+cor(data$age, data$f.time)
+
+# Relation between country and speed/error
+ggplot(data, aes(nationality, loc.err)) +
+  geom_boxplot() + coord_flip()
+
+ggplot(data, aes(nationality, dist)) +
+  geom_boxplot() + coord_flip()
+
+ggplot(data, aes(nationality, t.time)) +
+  geom_boxplot() + coord_flip()
+
+ggplot(data, aes(nationality, f.time)) +
+  geom_boxplot() + coord_flip()
+
+# Relation between gender and speed
+ggplot(data, aes(gender, loc.err)) +
+  geom_boxplot()
+
+ggplot(data, aes(gender, dist)) +
+  geom_boxplot()
+
+ggplot(data, aes(gender, t.time)) +
+  geom_boxplot()
+
+ggplot(data, aes(gender, f.time)) +
+  geom_boxplot()
+
+# Strength of learning-effect
+ggplot(data, aes(map, loc.err)) +
+  geom_boxplot(aes(colour=learned), alpha=0.5)
+
+ggplot(data, aes(map, dist)) +
+  geom_boxplot(aes(colour=learned), alpha=0.5)
+
+ggplot(data, aes(map, t.time)) +
+  geom_boxplot(aes(colour=learned), alpha=0.5)
+
+ggplot(data, aes(map, f.time)) +
+  geom_boxplot(aes(colour=learned), alpha=0.5)
+
+# significance
+
 
