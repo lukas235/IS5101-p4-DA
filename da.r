@@ -1,9 +1,18 @@
 #!/usr/bin/env Rscript
 require(ggplot2)
+require(stringdist)
+require(stringi)
+
 library(ggplot2)
+library(stringdist)
+library(stringi)
+
 # require(plyr)
 # Read in data
 data <- read.csv("datafile.csv")
+
+data["loc.err"] <- sqrt((data$lat-data$correct.lat)^2 + (data$long-data$correct.long)^2)
+data["dist"] <- stringdist(data$text, data$correct.text, method="lv") / stri_length(data$correct.text)
 
 n <- max(data$pid)
 
@@ -158,8 +167,10 @@ lines(xfit, yfit, col="blue", lwd=2)
 #   geom_point(data = df2, aes(x = correct.lon, y = correct.lat, fill = "red", alpha = 0.8), size = 5, shape = 21, alpha = 0.8) +
 #   guides(fill=FALSE, alpha=FALSE, size=FALSE)
 
-ma = sqrt((mapa$lat-mapa$correct.lat)^2 + (mapa$long-mapa$correct.long)^2)
-mapa_geom_err <- as.data.frame(cbind(mapa, ma))
+# mapa["loc.err"] <- sqrt((mapa$lat-mapa$correct.lat)^2 + (mapa$long-mapa$correct.long)^2)
+# mapb["loc.err"] <- sqrt((mapb$lat-mapb$correct.lat)^2 + (mapb$long-mapb$correct.long)^2)
+
+# mapa_geom_err <- as.data.frame(cbind(mapa, ma))
 
 hist(mapa_geom_err$ma, breaks = 20)
 
@@ -172,5 +183,24 @@ ggplot(mapa, aes(x=age)) + geom_bar()
 
 ggplot(mapa, aes(x=f.time)) +
   geom_histogram(aes(y=..density..), alpha=0.5,position='identity',binwidth=0.5) +
-  geom_density(aes(y=..density..,position="stack")) +
+  geom_density(aes(y=..density..)) +
   stat_function(fun = dnorm, args = list(mean = mean_mapa_loc_time, sd = sd_mapa_loc_time))
+
+ggplot(mapa, aes(x=loc.err)) +
+  geom_density(aes(y=..density..))
+
+ggplot(data, aes(x=loc.err)) +
+  geom_density(aes(group=map,colour=map, fill=map), alpha=0.2)
+
+t.test(mapa$loc.err, mapb$loc.err)
+var.test(mapa$loc.err, mapb$loc.err)
+# anova()
+# summary
+
+ggplot(data, aes(x=dist)) +
+  geom_histogram(aes(y=..density.., group=map,colour=map,fill=map), alpha=0.5,position='identity') +
+  geom_density(aes(group=map,colour=map, fill=map), alpha=0.2)
+
+t.test(mapa$dist, mapb$dist)
+var.test(mapa$dist, mapb$dist)
+

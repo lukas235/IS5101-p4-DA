@@ -36,8 +36,8 @@ X fit with normal dist
 
 
 3. Extended
- a) ggplot
- b) find significant (ggf. anova) difference between rporting error rates
+ X) ggplot
+ X) find significant difference between reporting error rates
  c) find significant difference in text typing error rates
  ---
  d) find correlations
@@ -46,6 +46,8 @@ X fit with normal dist
   - m/f
   - learning effect
   - speed and correctness
+
+4. If still time:
 
 
 
@@ -92,3 +94,4 @@ Questions:
 
 
 
+SUMMARY
