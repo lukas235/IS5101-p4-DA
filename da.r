@@ -2,10 +2,12 @@
 require(ggplot2)
 require(stringdist)
 require(stringi)
+require(ggmap)
 
 library(ggplot2)
 library(stringdist)
 library(stringi)
+library(ggmap)
 
 # 1-10: MapA MapB
 # 11-20: MapB MapA
@@ -17,6 +19,8 @@ learned <- function(pid, map){
 # Read in data
 data <- read.csv("datafile.csv")
 
+summary(data)
+# Add location error, string distances and boolean for learning-effect
 data["loc.err"] <- sqrt((data$lat-data$correct.lat)^2 + (data$long-data$correct.long)^2)
 data["dist"] <- stringdist(data$text, data$correct.text, method="lv") / stri_length(data$correct.text)
 data["learned"] <- learned(data$pid, data$map)
@@ -27,8 +31,12 @@ f <- length(subset(data, fid == 1 & map == 'MapA' & gender == 'f')$gender)
 m <- length(subset(data, fid == 1 & map == 'MapA' & gender == 'm')$gender)
 o <- length(subset(data, fid == 1 & map == 'MapA' & gender == 'o')$gender)
 
+# Split the table in subsets of MapA and MapB
 mapa <- subset(data, map == 'MapA')
 mapb <- subset(data, map == 'MapB')
+
+row_diff <- nrow(mapa) - nrow(mapb)
+
 
 # Pie Chart with Percentages of genders
 slices <- c(f,m,o)
@@ -37,33 +45,40 @@ pct <- round(slices/sum(slices)*100)
 lbls <- paste(lbls, ' (', slices, ' person(s))', sep="")
 lbls <- paste(lbls, "\n", pct) # add percents to labels 
 lbls <- paste(lbls,"%",sep="") # ad % to labels
-pie(slices,labels = lbls, col=rainbow(length(lbls)),main="Gender distribution")
+pie(slices,labels = lbls) # main="Gender distribution"
 
 # Calculate age mean, sd, range, bandwidth and plot
 age <- mean(subset(data, fid == 1 & map == 'MapA')$age)
+age_md <- median(subset(data, fid == 1 & map == 'MapA')$age)
 age_sd <- sd(subset(data, fid == 1 & map == 'MapA')$age)
 age_range <-range(subset(data, fid == 1 & map == 'MapA')$age)
 age_diff = age_range[2] - age_range[1]
-hist(subset(data, fid == 1 & map == 'MapA')$age, xlab="Age (years)", ylab="Count")
+hist(subset(data, fid == 1 & map == 'MapA')$age, xlab="Age (years)", ylab="Count", breaks = 30, col = "grey", main="Age distribution")
 
 
 # Nationalities
 mytable <- table(subset(data, fid == 1 & map =='MapA')$nationality)
 
 lbls <- paste(names(mytable), " (", mytable, " person(s))", "\n", as.vector(mytable)/sum(as.vector(mytable))*100, "%", sep="")
-pie(mytable, labels = lbls, 
-    main="Nationalities\n (7 different countries)")
+pie(mytable, labels = lbls)
 
 
 # Mean and SD of the questions answered with each map system
 faults_mapa <- aggregate(mapa$fid,by=list(mapa$pid), max, na.rm=TRUE)
 faults_mapb <- aggregate(mapb$fid,by=list(mapb$pid), max, na.rm=TRUE)
 
+fff <- rbind(faults_mapa, faults_mapb)
+
 mean_f_mapa <- mean(faults_mapa$x, na.rm=TRUE)
 mean_f_mapb <- mean(faults_mapb$x, na.rm=TRUE)
+ffx <- faults_mapa + faults_mapb
+mean_f <- mean(fff$x, na.rm=TRUE)
+mean_f2 <- mean(ffx$x, na.rm=TRUE)
 
 sd_f_mapa <- sd(faults_mapa$x, na.rm=TRUE)
 sd_f_mapb <- sd(faults_mapb$x, na.rm=TRUE)
+sd_f <- mean(faults$x, na.rm=TRUE)
+
 
 # Hyp 1 calculate mean & sd of times locating faults and conduct t- as well as F-test:
 
@@ -152,27 +167,25 @@ lines(xfit, yfit, col="blue", lwd=2)
 # plot( mapa$lat, mapa$long, main="Latitude against Longitude" )
 # plot( mapb$lat, mapb$long, main="Latitude against Longitude" )
 
-# # loading the required packages
-# library(ggplot2)
-# library(ggmap)
+
 # 
-# # creating a sample data.frame with your lat/lon points
-# lon <- data$long
-# lat <- data$lat
-# correct.lon <- data$correct.long
-# correct.lat <- data$correct.lat
-# df <- as.data.frame(cbind(lon,lat))
-# df2 <-as.data.frame(cbind(correct.lon,correct.lat))
-# 
-# # getting the map
-# mapgilbert <- get_map(location = c(lon = mean(df$lon), lat = mean(df$lat)), zoom = 10,
-#                       maptype = "satellite", scale = 2)
-# 
-# # plotting the map with some points on it
-# ggmap(mapgilbert) +
-#   geom_point(data = df, aes(x = lon, y = lat, fill = "red", alpha = 1), size = 5, shape = 15, fill = "red") +
-#   geom_point(data = df2, aes(x = correct.lon, y = correct.lat, fill = "red", alpha = 0.8), size = 5, shape = 21, alpha = 0.8) +
-#   guides(fill=FALSE, alpha=FALSE, size=FALSE)
+# creating a sample data.frame with your lat/lon points
+lon <- data$long
+lat <- data$lat
+correct.lon <- data$correct.long
+correct.lat <- data$correct.lat
+df <- as.data.frame(cbind(lon,lat))
+df2 <-as.data.frame(cbind(correct.lon,correct.lat))
+
+# getting the map
+mapgilbert <- get_map(location = c(lon = mean(df$lon), lat = mean(df$lat)), zoom = 10,
+                      maptype = "satellite", scale = 2)
+
+# plotting the map with some points on it
+ggmap(mapgilbert) +
+  geom_point(data = df2, aes(x = correct.lon, y = correct.lat, fill = 100, alpha = 0.1), size = 5, shape = 21, alpha = 0.1) +
+  geom_point(data = df, aes(x = lon, y = lat, fill = 1, alpha = 1), size = 2, shape = 21) +
+  guides(fill=FALSE, alpha=FALSE, size=FALSE)
 
 # mapa["loc.err"] <- sqrt((mapa$lat-mapa$correct.lat)^2 + (mapa$long-mapa$correct.long)^2)
 # mapb["loc.err"] <- sqrt((mapb$lat-mapb$correct.lat)^2 + (mapb$long-mapb$correct.long)^2)
@@ -182,16 +195,26 @@ lines(xfit, yfit, col="blue", lwd=2)
 hist(mapa_geom_err$ma, breaks = 20)
 
 # boxplot anova
-
+cor.test(data$f.time,data$t.time)
 ggplot(data, aes(x=f.time, y=t.time)) + geom_point(size=1, shape=1, color="steelblue", stroke=1)
 ggplot(data, aes(x=f.time)) + geom_histogram(size=2, fill=3, color="red", binwidth = 1) + geom_density(kernel="gaussian")
 ggplot(data, aes(f.time)) + geom_density(size=1, fill=3, color="red") + geom_density(kernel="gaussian") + labs(title="Density plot")  # Density plot
 ggplot(mapa, aes(x=age)) + geom_bar()
 
-ggplot(mapa, aes(x=f.time)) +
-  geom_histogram(aes(y=..density..), alpha=0.5,position='identity',binwidth=0.5) +
-  geom_density(aes(y=..density..)) +
-  stat_function(fun = dnorm, args = list(mean = mean_mapa_loc_time, sd = sd_mapa_loc_time))
+p1 <- ggplot(mapa, aes(x=f.time)) +
+  geom_histogram(aes(y=..density..), alpha=0.5,position='identity',binwidth=0.5, colour="black") +
+  geom_density(aes(y=..density..), alpha=0.2, fill="red", colour="red", size=1) +
+  stat_function(fun = dnorm, args = list(mean = mean_mapa_loc_time, sd = sd_mapa_loc_time), colour="blue", size=1) + 
+  labs(title="Distribution of f.time (MapA)") + theme(plot.title=element_text(face="bold", color="black"))
+
+p2 <- ggplot(mapb, aes(x=f.time)) +
+  geom_histogram(aes(y=..density..), alpha=0.5,position='identity',binwidth=0.5, colour="black") +
+  geom_density(aes(y=..density..), alpha=0.2, fill="red", colour="red", size=1) +
+  stat_function(fun = dnorm, args = list(mean = mean_mapb_loc_time, sd = sd_mapb_loc_time), colour="blue", size=1) +
+  labs(title="Distribution of f.time (MapB)") + theme(plot.title=element_text(face="bold", color="black"))
+
+library(gridExtra)
+grid.arrange(p1, p2, ncol=2)  # arrange
 
 ggplot(mapa, aes(x=loc.err)) +
   geom_density(aes(y=..density..))

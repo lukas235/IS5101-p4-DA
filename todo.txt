@@ -1,6 +1,6 @@
-- calculate as much meaningful information as you can about the dataset
+X calculate as much meaningful information as you can about the dataset
 - write a report detailing and justifying the conclusions you have extracted
- - section: comprehensive description of the dataset
+ - section: comprehensive description of the dataset (?)
 - indicate & justify whether you accept or reject each of the provided hypotheses
  -> BUT analysis should not be limited to them
  
@@ -40,12 +40,12 @@ X fit with normal dist
  X) find significant difference between reporting error rates
  X) find significant difference in text typing error rates
  ---
- d) find correlations
-  - age-accuracy/speed...
-  - nationality
-  - m/f
-  - learning effect
-  - speed and correctness
+ d) find correlations and relations
+  X age-accuracy/speed...
+  X nationality
+  X m/f
+  X learning effect
+  X speed and correctness
 
 4. If still time:
  - Try Anova with diff hypos
