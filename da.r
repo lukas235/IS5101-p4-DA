@@ -3,11 +3,15 @@ require(ggplot2)
 require(stringdist)
 require(stringi)
 require(ggmap)
+require(gridExtra)
+
+# if(!require(rcompanion)){install.packages("rcompanion")}
 
 library(ggplot2)
 library(stringdist)
 library(stringi)
 library(ggmap)
+library(gridExtra)
 
 # 1-10: MapA MapB
 # 11-20: MapB MapA
@@ -15,27 +19,29 @@ learned <- function(pid, map){
   return ((pid <= 10 & map == "MapB")|(pid >10 & map == "MapA"))
 }
 
-# require(plyr)
 # Read in data
 data <- read.csv("datafile.csv")
 
 summary(data)
-# Add location error, string distances and boolean for learning-effect
+
+# Add location error, string distances and boolean for learning-effect to the data structure
 data["loc.err"] <- sqrt((data$lat-data$correct.lat)^2 + (data$long-data$correct.long)^2)
 data["dist"] <- stringdist(data$text, data$correct.text, method="lv") / stri_length(data$correct.text)
 data["learned"] <- learned(data$pid, data$map)
 
-n <- max(data$pid)
+# Number of participants
+max(data$pid)
 
 f <- length(subset(data, fid == 1 & map == 'MapA' & gender == 'f')$gender)
 m <- length(subset(data, fid == 1 & map == 'MapA' & gender == 'm')$gender)
 o <- length(subset(data, fid == 1 & map == 'MapA' & gender == 'o')$gender)
 
-# Split the table in subsets of MapA and MapB
+# Split the table into subsets of MapA and MapB
 mapa <- subset(data, map == 'MapA')
 mapb <- subset(data, map == 'MapB')
 
-row_diff <- nrow(mapa) - nrow(mapb)
+# Difference in reported faults between A and B
+nrow(mapa) - nrow(mapb)
 
 
 # Pie Chart with Percentages of genders
@@ -47,7 +53,7 @@ lbls <- paste(lbls, "\n", pct) # add percents to labels
 lbls <- paste(lbls,"%",sep="") # ad % to labels
 pie(slices,labels = lbls) # main="Gender distribution"
 
-# Calculate age mean, sd, range, bandwidth and plot
+# Calculate age mean, sd, range, bandwidth and plot of age
 age <- mean(subset(data, fid == 1 & map == 'MapA')$age)
 age_md <- median(subset(data, fid == 1 & map == 'MapA')$age)
 age_sd <- sd(subset(data, fid == 1 & map == 'MapA')$age)
@@ -58,7 +64,6 @@ hist(subset(data, fid == 1 & map == 'MapA')$age, xlab="Age (years)", ylab="Count
 
 # Nationalities
 mytable <- table(subset(data, fid == 1 & map =='MapA')$nationality)
-
 lbls <- paste(names(mytable), " (", mytable, " person(s))", "\n", as.vector(mytable)/sum(as.vector(mytable))*100, "%", sep="")
 pie(mytable, labels = lbls)
 
@@ -67,13 +72,13 @@ pie(mytable, labels = lbls)
 faults_mapa <- aggregate(mapa$fid,by=list(mapa$pid), max, na.rm=TRUE)
 faults_mapb <- aggregate(mapb$fid,by=list(mapb$pid), max, na.rm=TRUE)
 
-fff <- rbind(faults_mapa, faults_mapb)
+# fff <- rbind(faults_mapa, faults_mapb)
 
-mean_f_mapa <- mean(faults_mapa$x, na.rm=TRUE)
-mean_f_mapb <- mean(faults_mapb$x, na.rm=TRUE)
-ffx <- faults_mapa + faults_mapb
-mean_f <- mean(fff$x, na.rm=TRUE)
-mean_f2 <- mean(ffx$x, na.rm=TRUE)
+mean(faults_mapa$x, na.rm=TRUE)
+mean(faults_mapb$x, na.rm=TRUE)
+
+faults <- faults_mapa + faults_mapb
+mean(faults$x, na.rm=TRUE)
 
 sd_f_mapa <- sd(faults_mapa$x, na.rm=TRUE)
 sd_f_mapb <- sd(faults_mapb$x, na.rm=TRUE)
@@ -82,94 +87,82 @@ sd_f <- mean(faults$x, na.rm=TRUE)
 
 # Hyp 1 calculate mean & sd of times locating faults and conduct t- as well as F-test:
 
-# We can assume normal dist
-mapa_loc_time <-subset(data, map == 'MapA', na.rm=TRUE)$f.time
-hist(mapa_loc_time, main="Distribution of finding times for MapA", xlab="Time in sec to locate a fault", breaks = 20)
-curve(dnorm(x, mean=mean(mapa_loc_time), sd=sd(mapa_loc_time)), add=TRUE)
-
-plot(density(mapa_loc_time),main="Density estimate of data", lty="dotted")
-curve(dnorm(x, mean=mean(mapa_loc_time), sd=sd(mapa_loc_time)), add=TRUE)
-
-# chisq.test(density(mapa_loc_time), dnorm(x, mean=mean(mapa_loc_time), sd=sd(mapa_loc_time)))
-
-mapb_loc_time <-subset(data, map == 'MapB', na.rm=TRUE)$f.time
-hist(mapb_loc_time, main="Distribution of finding times for MapB", xlab="Time in sec to locate a fault", breaks = 20)
-curve(dnorm(x, mean=mean(mapb_loc_time), sd=sd(mapb_loc_time)), add=TRUE)
-
 # Means & StdDevs
-mean_mapa_loc_time = mean(mapa_loc_time, na.rm=TRUE)
-sd_mapa_loc_time = sd(mapa_loc_time, na.rm=TRUE)
+mean(mapa$f.time, na.rm=TRUE)
+sd(mapa$f.time, na.rm=TRUE)
 
-mean_mapb_loc_time = mean(mapb_loc_time, na.rm=TRUE)
-sd_mapb_loc_time = sd(mapb_loc_time, na.rm=TRUE)
+mean(mapb$f.time, na.rm=TRUE)
+sd(mapb$f.time, na.rm=TRUE)
+
+# We can assume normal dist -> plots
+mapa.ttime.nd <- ggplot(mapa, aes(x=f.time)) +
+  geom_histogram(aes(y=..density..), alpha=0.5,position='identity',binwidth=0.5, colour="black") +
+  geom_density(aes(y=..density..), alpha=0.2, fill="red", colour="red", size=1) +
+  stat_function(fun = dnorm, args = list(mean = mean(mapa$f.time, na.rm=TRUE), sd = sd(mapa$f.time, na.rm=TRUE)), colour="blue", size=1) + 
+  labs(title="Distribution of f.time (MapA)") + theme(plot.title=element_text(face="bold", color="black"))
+
+mapb.ttime.nd <- ggplot(mapb, aes(x=f.time)) +
+  geom_histogram(aes(y=..density..), alpha=0.5,position='identity',binwidth=0.5, colour="black") +
+  geom_density(aes(y=..density..), alpha=0.2, fill="red", colour="red", size=1) +
+  stat_function(fun = dnorm, args = list(mean = mean(mapb$f.time, na.rm=TRUE), sd = sd(mapb$f.time, na.rm=TRUE)), colour="blue", size=1) +
+  labs(title="Distribution of f.time (MapB)") + theme(plot.title=element_text(face="bold", color="black"))
+
+grid.arrange(mapa.ttime.nd, mapb.ttime.nd, ncol=2)  # arrange
 
 # Tests
-t.test(mapa_loc_time, mapb_loc_time)
-var.test(mapa_loc_time, mapb_loc_time)
+t.test(mapa$f.time , mapb$f.time)
+var.test(mapa$f.time , mapb$f.time)
 
 
 
 # Hyp 2 calculate mean & sd of times typing faults and conduct t- as well as F-test:
-mapa_typ_time <-subset(data, map == 'MapA', na.rm=TRUE)$t.time
-hist(mapa_typ_time, main="Distribution of typing times for MapA", xlab="Time in sec to type in a fault", breaks = 20)
-# curve(dnorm(x, mean=mean(mapa_typ_time), sd=sd(mapb_typ_time)), add=TRUE)
-# lines(density(mapa_typ_time))             # add a density estimate with defaults
-# lines(density(mapa_typ_time), lty="dotted")
-curve(max(mapa_typ_time)*dnorm(x, mean=mean(mapa_typ_time), sd=sd(mapa_typ_time)), add=TRUE)
 
-mapb_typ_time <-subset(data, map == 'MapB', na.rm=TRUE)$t.time
-hist(mapb_typ_time, main="Distribution of typing times for MapB", xlab="Time in sec to type a fault", breaks = 20)
-# curve(dnorm(x, mean=mean(mapb_typ_time), sd=sd(mapb_typ_time)), add=TRUE)
-plot(density(mapb_typ_time),main="Density estimate of data", lty="dotted")
-curve(dnorm(x, mean=mean(mapb_typ_time), sd=sd(mapb_typ_time)), add=TRUE)
+# Means & StdDevs
+mean(mapa$t.time, na.rm=TRUE)
+sd(mapa$t.time, na.rm=TRUE)
 
-plot(ecdf(mapb_typ_time),main="Empirical cumulative distribution function")
+mean(mapb$t.time, na.rm=TRUE)
+sd(mapb$t.time, na.rm=TRUE)
 
-# range(mapb_typ_time)
-# breaks = seq(1.0, 3, by=0.1)
-# mapb_typ_time.cut = cut(mapb_typ_time, breaks)
-# mapb_typ_time.cut = mapb_typ_time.cut
-# mapb_typ_time.freq = table(mapb_typ_time.cut)
-# 
-# plot(mapb_typ_time.cut)
+# We can assume normal dist -> plots
+mapa.ftime.nd <- ggplot(mapa, aes(x=t.time)) +
+  geom_histogram(aes(y=..density..), alpha=0.5,position='identity',binwidth=0.1, colour="black") +
+  geom_density(aes(y=..density..), alpha=0.2, fill="red", colour="red", size=1) +
+  stat_function(fun = dnorm, args = list(mean = mean(mapa$t.time, na.rm=TRUE), sd = sd(mapa$t.time, na.rm=TRUE)), colour="blue", size=1) + 
+  labs(title="Distribution of t.time (MapA)") + theme(plot.title=element_text(face="bold", color="black"))
 
-mean_mapa_typ_time = mean(mapa_typ_time, na.rm=TRUE)
-sd_mapa_typ_time = sd(mapa_typ_time, na.rm=TRUE)
+mapb.ftime.nd <- ggplot(mapb, aes(x=t.time)) +
+  geom_histogram(aes(y=..density..), alpha=0.5,position='identity',binwidth=0.1, colour="black") +
+  geom_density(aes(y=..density..), alpha=0.2, fill="red", colour="red", size=1) +
+  stat_function(fun = dnorm, args = list(mean = mean(mapb$t.time, na.rm=TRUE), sd = sd(mapb$t.time, na.rm=TRUE)), colour="blue", size=1) +
+  labs(title="Distribution of t.time (MapB)") + theme(plot.title=element_text(face="bold", color="black"))
 
-mean_mapb_typ_time = mean(mapb_typ_time, na.rm=TRUE)
-sd_mapb_typ_time = sd(mapb_typ_time, na.rm=TRUE)
+grid.arrange(mapa.ftime.nd, mapb.ftime.nd, ncol=2)  # arrange
 
-t2 <- t.test(mapa_typ_time, mapb_typ_time)
-v2 <- var.test(mapa_typ_time, mapb_typ_time)
+# Tests
+t.test(mapa$t.time , mapb$t.time)
+var.test(mapa$t.time , mapb$t.time)
 
-t.test(mapa_typ_time, mapb_typ_time)
-var.test(mapa_typ_time, mapb_typ_time)
+
 
 # xd <- subset(data, map == 'MapA', na.rm=TRUE)$t.time
-# h<-hist(xd, breaks=20, col="grey", xlab="Time in seconds", main="Distribution of typing times for MapA") 
+# dens<-density(xd)
+# dens$y <-dens$y/10
+# h<-hist(xd, breaks=20, col="grey", xlab="Time in seconds", main="Distribution of typing times for MapA")
+# # h<-hist(x, plot=F)
+# h$counts <- h$counts / sum(h$counts)
+# plot(h, freq=TRUE, ylab="Relative Frequency", xlab="Time in seconds", main="Distribution of typing times for MapA", col="grey")
 # xfit<-seq(min(xd),max(xd),length=3200) 
 # yfit<-dnorm(xfit,mean=mean(xd),sd=sd(xd)) 
-# yfit <- yfit*diff(h$mids[1:2])*length(xd)
-
-xd <- subset(data, map == 'MapA', na.rm=TRUE)$t.time
-dens<-density(xd)
-dens$y <-dens$y/10
-h<-hist(xd, breaks=20, col="grey", xlab="Time in seconds", main="Distribution of typing times for MapA")
-# h<-hist(x, plot=F)
-h$counts <- h$counts / sum(h$counts)
-plot(h, freq=TRUE, ylab="Relative Frequency", xlab="Time in seconds", main="Distribution of typing times for MapA", col="grey")
-xfit<-seq(min(xd),max(xd),length=3200) 
-yfit<-dnorm(xfit,mean=mean(xd),sd=sd(xd)) 
-yfit <- yfit*diff(h$mids[1:2])
-lines(dens, lty="dotted",lwd=2, col="red")
-lines(xfit, yfit, col="blue", lwd=2)
+# yfit <- yfit*diff(h$mids[1:2])
+# lines(dens, lty="dotted",lwd=2, col="red")
+# lines(xfit, yfit, col="blue", lwd=2)
 
 # plot( mapa$lat, mapa$long, main="Latitude against Longitude" )
 # plot( mapb$lat, mapb$long, main="Latitude against Longitude" )
 
 
-# 
-# creating a sample data.frame with your lat/lon points
+# Show coordinates on the map
 lon <- data$long
 lat <- data$lat
 correct.lon <- data$correct.long
@@ -177,75 +170,77 @@ correct.lat <- data$correct.lat
 df <- as.data.frame(cbind(lon,lat))
 df2 <-as.data.frame(cbind(correct.lon,correct.lat))
 
-# getting the map
 mapgilbert <- get_map(location = c(lon = mean(df$lon), lat = mean(df$lat)), zoom = 10,
                       maptype = "satellite", scale = 2)
 
-# plotting the map with some points on it
 ggmap(mapgilbert) +
   geom_point(data = df2, aes(x = correct.lon, y = correct.lat, fill = 100, alpha = 0.1), size = 5, shape = 21, alpha = 0.1) +
   geom_point(data = df, aes(x = lon, y = lat, fill = 1, alpha = 1), size = 2, shape = 21) +
   guides(fill=FALSE, alpha=FALSE, size=FALSE)
 
-# mapa["loc.err"] <- sqrt((mapa$lat-mapa$correct.lat)^2 + (mapa$long-mapa$correct.long)^2)
-# mapb["loc.err"] <- sqrt((mapb$lat-mapb$correct.lat)^2 + (mapb$long-mapb$correct.long)^2)
-
-# mapa_geom_err <- as.data.frame(cbind(mapa, ma))
-
-hist(mapa_geom_err$ma, breaks = 20)
-
-# boxplot anova
-cor.test(data$f.time,data$t.time)
-ggplot(data, aes(x=f.time, y=t.time)) + geom_point(size=1, shape=1, color="steelblue", stroke=1)
-ggplot(data, aes(x=f.time)) + geom_histogram(size=2, fill=3, color="red", binwidth = 1) + geom_density(kernel="gaussian")
-ggplot(data, aes(f.time)) + geom_density(size=1, fill=3, color="red") + geom_density(kernel="gaussian") + labs(title="Density plot")  # Density plot
-ggplot(mapa, aes(x=age)) + geom_bar()
-
-p1 <- ggplot(mapa, aes(x=f.time)) +
-  geom_histogram(aes(y=..density..), alpha=0.5,position='identity',binwidth=0.5, colour="black") +
-  geom_density(aes(y=..density..), alpha=0.2, fill="red", colour="red", size=1) +
-  stat_function(fun = dnorm, args = list(mean = mean_mapa_loc_time, sd = sd_mapa_loc_time), colour="blue", size=1) + 
-  labs(title="Distribution of f.time (MapA)") + theme(plot.title=element_text(face="bold", color="black"))
-
-p2 <- ggplot(mapb, aes(x=f.time)) +
-  geom_histogram(aes(y=..density..), alpha=0.5,position='identity',binwidth=0.5, colour="black") +
-  geom_density(aes(y=..density..), alpha=0.2, fill="red", colour="red", size=1) +
-  stat_function(fun = dnorm, args = list(mean = mean_mapb_loc_time, sd = sd_mapb_loc_time), colour="blue", size=1) +
-  labs(title="Distribution of f.time (MapB)") + theme(plot.title=element_text(face="bold", color="black"))
-
-library(gridExtra)
-grid.arrange(p1, p2, ncol=2)  # arrange
-
-ggplot(mapa, aes(x=loc.err)) +
-  geom_density(aes(y=..density..))
-
+# Analysis of localisation error
 ggplot(data, aes(x=loc.err)) +
   geom_density(aes(group=map,colour=map, fill=map), alpha=0.2)
 
 t.test(mapa$loc.err, mapb$loc.err)
 var.test(mapa$loc.err, mapb$loc.err)
-# anova()
-# summary
+wilcox.test(mapa$loc.err, mapb$loc.err)
+kruskal.test(loc.err ~ map, data = data)
 
+median(mapa$loc.err)
+median(mapb$loc.err)
+
+
+# Analysis of the typing error
 ggplot(data, aes(x=dist)) +
   geom_histogram(aes(y=..density.., group=map,colour=map,fill=map), alpha=0.5,position='identity') +
   geom_density(aes(group=map,colour=map, fill=map), alpha=0.2)
 
 t.test(mapa$dist, mapb$dist)
 var.test(mapa$dist, mapb$dist)
+wilcox.test(mapa$dist, mapb$dist)
+kruskal.test(dist ~ map, data = data)
 
-# Correlations between time and error
-ggplot(data, aes(x=f.time, y=loc.err)) +
-  geom_point(aes(group=map,colour=map,fill=map), alpha=0.5)
+median(mapa$dist)
+median(mapb$dist)
 
-ggplot(data, aes(x=t.time, y=dist)) +
-  geom_point(aes(group=map,colour=map,fill=map), alpha=0.5)
 
-cor(data$f.time, data$loc.err)
-cor(data$t.time, data$dist)
-cor.test(data$f.time, data$loc.err, alternative="two.sided")
 
-# Correlation between age and error rate
+## Correlation between times
+ggplot(data, aes(data$f.time, data$t.time, colour=data$map)) +
+  geom_point() +
+  geom_smooth(method = "lm")
+
+# cor.test(data$f.time,data$t.time)
+cor.test(mapa$f.time,mapa$t.time)
+cor.test(mapb$f.time,mapb$t.time)
+
+## Correlation between errors
+ggplot(data, aes(data$dist, data$loc.err, colour=data$map)) +
+  geom_point() +
+  geom_smooth(method = "lm")
+
+# cor.test(data$f.time,data$t.time)
+cor.test(mapa$loc.err,mapa$dist)
+cor.test(mapb$loc.err,mapb$dist)
+
+
+## Correlations between time and error
+ggplot(data, aes(x=f.time, y=loc.err, colour=map)) +
+  geom_point(alpha=0.5) +
+  geom_smooth(method = "lm")
+
+ggplot(data, aes(x=t.time, y=dist, colour=map)) +
+  geom_point(alpha=0.5) +
+  geom_smooth(method = "lm")
+
+cor.test(mapa$f.time, mapa$loc.err)
+cor.test(mapb$f.time, mapb$loc.err)
+
+cor.test(mapa$t.time, mapa$dist)
+cor.test(mapb$t.time, mapb$dist)
+
+# Relations between age and {loc.err, dist, t.time, f.time}
 ggplot(data, aes(x=age, y=loc.err)) +
   geom_point(aes(group=map,colour=map,fill=map), alpha=0.5)
 
@@ -255,7 +250,7 @@ cor(data$age, data$dist)
 cor(data$age, data$t.time)
 cor(data$age, data$f.time)
 
-# Relation between country and speed/error
+# Relation between country and {loc.err, dist, t.time, f.time}
 ggplot(data, aes(nationality, loc.err)) +
   geom_boxplot() + coord_flip()
 
@@ -269,17 +264,35 @@ ggplot(data, aes(nationality, f.time)) +
   geom_boxplot() + coord_flip()
 
 # Relation between gender and speed
-ggplot(data, aes(gender, loc.err)) +
+ggplot(data, aes(gender, loc.err, colour=map)) +
   geom_boxplot()
 
-ggplot(data, aes(gender, dist)) +
+ggplot(data, aes(gender, dist, colour=map)) +
   geom_boxplot()
 
-ggplot(data, aes(gender, t.time)) +
+ggplot(data, aes(gender, t.time, colour=map)) +
   geom_boxplot()
 
-ggplot(data, aes(gender, f.time)) +
+ggplot(data, aes(gender, f.time, colour=map)) +
   geom_boxplot()
+
+
+# aggregate(data$f.time, list(data$fid), mean)
+ttt <- aggregate(data$f.time, list(data$fid, data$map), mean)
+
+# ggplot(ttt, aes(Group.1, x)) +
+#   geom_line(aes(group=ttt$Group.2, colour=ttt$Group.2)) + 
+#   geom_smooth(method = "lm", group=ttt$Group.2, colour=ttt$Group.2)
+
+ggplot(ttt, aes(Group.1, x, colour = Group.2)) +
+  geom_point() +
+  geom_smooth(se = FALSE, method = "lm")
+
+
+# ggplot(data, aes(x=fid, y=mean() +
+#   geom_point(aes(group=map,colour=map), alpha=0.2)
+
+
 
 # Strength of learning-effect
 ggplot(data, aes(map, loc.err)) +
@@ -293,7 +306,4 @@ ggplot(data, aes(map, t.time)) +
 
 ggplot(data, aes(map, f.time)) +
   geom_boxplot(aes(colour=learned), alpha=0.5)
-
-# significance
-
 
