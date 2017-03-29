@@ -96,19 +96,19 @@ mean(mapb$f.time, na.rm=TRUE)
 sd(mapb$f.time, na.rm=TRUE)
 
 # We can assume normal dist -> plots
-mapa.ttime.nd <- ggplot(mapa, aes(x=f.time)) +
+mapa.ftime.nd <- ggplot(mapa, aes(x=f.time)) +
   geom_histogram(aes(y=..density..), alpha=0.5,position='identity',binwidth=0.5, colour="black") +
   geom_density(aes(y=..density..), alpha=0.2, fill="red", colour="red", size=1) +
-  stat_function(fun = dnorm, args = list(mean = mean(mapa$f.time, na.rm=TRUE), sd = sd(mapa$f.time, na.rm=TRUE)), colour="blue", size=1) + 
+  stat_function(fun = dnorm, args = list(mean = mean(mapa$f.time, na.rm=TRUE), sd = sd(mapa$f.time, na.rm=TRUE)), colour="blue", size=1, linetype="dashed") + 
   labs(title="Distribution of f.time (MapA)") + theme(plot.title=element_text(face="bold", color="black"))
 
-mapb.ttime.nd <- ggplot(mapb, aes(x=f.time)) +
+mapb.ftime.nd <- ggplot(mapb, aes(x=f.time)) +
   geom_histogram(aes(y=..density..), alpha=0.5,position='identity',binwidth=0.5, colour="black") +
   geom_density(aes(y=..density..), alpha=0.2, fill="red", colour="red", size=1) +
-  stat_function(fun = dnorm, args = list(mean = mean(mapb$f.time, na.rm=TRUE), sd = sd(mapb$f.time, na.rm=TRUE)), colour="blue", size=1) +
+  stat_function(fun = dnorm, args = list(mean = mean(mapb$f.time, na.rm=TRUE), sd = sd(mapb$f.time, na.rm=TRUE)), colour="blue", size=1, linetype="dashed") +
   labs(title="Distribution of f.time (MapB)") + theme(plot.title=element_text(face="bold", color="black"))
 
-grid.arrange(mapa.ttime.nd, mapb.ttime.nd, ncol=2)  # arrange
+grid.arrange(mapa.ftime.nd, mapb.ftime.nd, ncol=2)  # arrange
 
 # Tests
 t.test(mapa$f.time , mapb$f.time)
@@ -126,42 +126,23 @@ mean(mapb$t.time, na.rm=TRUE)
 sd(mapb$t.time, na.rm=TRUE)
 
 # We can assume normal dist -> plots
-mapa.ftime.nd <- ggplot(mapa, aes(x=t.time)) +
+mapa.ttime.nd <- ggplot(mapa, aes(x=t.time)) +
   geom_histogram(aes(y=..density..), alpha=0.5,position='identity',binwidth=0.1, colour="black") +
   geom_density(aes(y=..density..), alpha=0.2, fill="red", colour="red", size=1) +
-  stat_function(fun = dnorm, args = list(mean = mean(mapa$t.time, na.rm=TRUE), sd = sd(mapa$t.time, na.rm=TRUE)), colour="blue", size=1) + 
+  stat_function(fun = dnorm, args = list(mean = mean(mapa$t.time, na.rm=TRUE), sd = sd(mapa$t.time, na.rm=TRUE)), colour="blue", size=1, linetype="dashed") + 
   labs(title="Distribution of t.time (MapA)") + theme(plot.title=element_text(face="bold", color="black"))
 
-mapb.ftime.nd <- ggplot(mapb, aes(x=t.time)) +
+mapb.ttime.nd <- ggplot(mapb, aes(x=t.time)) +
   geom_histogram(aes(y=..density..), alpha=0.5,position='identity',binwidth=0.1, colour="black") +
   geom_density(aes(y=..density..), alpha=0.2, fill="red", colour="red", size=1) +
-  stat_function(fun = dnorm, args = list(mean = mean(mapb$t.time, na.rm=TRUE), sd = sd(mapb$t.time, na.rm=TRUE)), colour="blue", size=1) +
+  stat_function(fun = dnorm, args = list(mean = mean(mapb$t.time, na.rm=TRUE), sd = sd(mapb$t.time, na.rm=TRUE)), colour="blue", size=1, linetype="dashed") +
   labs(title="Distribution of t.time (MapB)") + theme(plot.title=element_text(face="bold", color="black"))
 
-grid.arrange(mapa.ftime.nd, mapb.ftime.nd, ncol=2)  # arrange
+grid.arrange(mapa.ttime.nd, mapb.ttime.nd, ncol=2)  # arrange
 
 # Tests
 t.test(mapa$t.time , mapb$t.time)
 var.test(mapa$t.time , mapb$t.time)
-
-
-
-# xd <- subset(data, map == 'MapA', na.rm=TRUE)$t.time
-# dens<-density(xd)
-# dens$y <-dens$y/10
-# h<-hist(xd, breaks=20, col="grey", xlab="Time in seconds", main="Distribution of typing times for MapA")
-# # h<-hist(x, plot=F)
-# h$counts <- h$counts / sum(h$counts)
-# plot(h, freq=TRUE, ylab="Relative Frequency", xlab="Time in seconds", main="Distribution of typing times for MapA", col="grey")
-# xfit<-seq(min(xd),max(xd),length=3200) 
-# yfit<-dnorm(xfit,mean=mean(xd),sd=sd(xd)) 
-# yfit <- yfit*diff(h$mids[1:2])
-# lines(dens, lty="dotted",lwd=2, col="red")
-# lines(xfit, yfit, col="blue", lwd=2)
-
-# plot( mapa$lat, mapa$long, main="Latitude against Longitude" )
-# plot( mapb$lat, mapb$long, main="Latitude against Longitude" )
-
 
 # Show coordinates on the map
 lon <- data$long
@@ -181,7 +162,9 @@ ggmap(mapgilbert) +
 
 # Analysis of localisation error
 ggplot(data, aes(x=loc.err)) +
+  geom_histogram(aes(y=..density.., group=map,colour=map,fill=map), alpha=0.1,position='identity') +
   geom_density(aes(group=map,colour=map, fill=map), alpha=0.2)
+  # geom_histogram(aes(y=..density..), alpha = 0.2)
 
 t.test(mapa$loc.err, mapb$loc.err)
 var.test(mapa$loc.err, mapb$loc.err)
@@ -194,7 +177,7 @@ median(mapb$loc.err)
 
 # Analysis of the typing error
 ggplot(data, aes(x=dist)) +
-  geom_histogram(aes(y=..density.., group=map,colour=map,fill=map), alpha=0.5,position='identity') +
+  geom_histogram(aes(y=..density.., group=map,colour=map,fill=map), binwidth = 0.05, alpha=0.2,position='identity') +
   geom_density(aes(group=map,colour=map, fill=map), alpha=0.2)
 
 t.test(mapa$dist, mapb$dist)
@@ -213,9 +196,10 @@ times.tmp <- aggregate(data$f.time, list(data$pid), mean)
 times.avg['y'] <- times.tmp$x
 times.avg <- cbind(times.avg, times.tmp$x)
 
-ggplot(times.avg, aes(times.avg$x, times.avg$y)) +
+ggc1 <- ggplot(times.avg, aes(times.avg$x, times.avg$y)) +
   geom_point() +
-  geom_smooth(method = "lm")
+  geom_smooth(method = "lm") +
+  ylab("f.time") + xlab("t.time") + labs(title = "Correlation between\nf.time and t.time")
 
 cor.test(times.avg$x, times.avg$y)
 
@@ -233,9 +217,10 @@ errors.tmp <- aggregate(data$dist, list(data$pid), mean)
 errors.avg['y'] <- errors.tmp$x
 errors.avg <- cbind(errors.avg, errors.tmp$x)
 
-ggplot(errors.avg, aes(errors.avg$x, errors.avg$y)) +
+ggc2 <- ggplot(errors.avg, aes(errors.avg$x, errors.avg$y)) +
   geom_point() +
-  geom_smooth(method = "lm")
+  geom_smooth(method = "lm") +
+  ylab("Typing Error") + xlab("Localisation Error") + labs(title = "Correlation between typing\nerror and localisation error")
 
 cor.test(errors.avg$x, errors.avg$y)
 
@@ -254,9 +239,10 @@ floc.tmp <- aggregate(data$loc.err, list(data$pid), mean)
 floc.avg['y'] <- floc.tmp$x
 floc.avg <- cbind(floc.avg, floc.tmp$x)
 
-ggplot(floc.avg, aes(x=floc.avg$x, y=floc.avg$y)) +
+ggc3 <- ggplot(floc.avg, aes(x=floc.avg$x, y=floc.avg$y)) +
   geom_point() +
-  geom_smooth(method = "lm")
+  geom_smooth(method = "lm") +
+  ylab("Localisation Error") + xlab("f.time") + labs(title = "Correlation between\nf.time and Localisation Error")
 
 cor.test(floc.avg$x, floc.avg$y)
 
@@ -266,11 +252,14 @@ tdist.tmp <- aggregate(data$dist, list(data$pid), mean)
 tdist.avg['y'] <- tdist.tmp$x
 tdist.avg <- cbind(tdist.avg, tdist.tmp$x)
 
-ggplot(tdist.avg, aes(tdist.avg$x, tdist.avg$y)) +
+ggc4 <- ggplot(tdist.avg, aes(tdist.avg$x, tdist.avg$y)) +
   geom_point() +
-  geom_smooth(method = "lm")
+  geom_smooth(method = "lm") +
+  ylab("Typing Error") + xlab("t.time") + labs(title = "Correlation between\ntyping error and t.time")
 
 cor.test(tdist.avg$x, tdist.avg$y)
+
+grid.arrange(ggc1, ggc2 ,ggc3, ggc4, ncol=2)  # arrange
 
 
 # ggplot(data, aes(x=f.time, y=loc.err, colour=map)) +
@@ -289,51 +278,77 @@ cor.test(tdist.avg$x, tdist.avg$y)
 
 # Relations between age and {loc.err, dist, t.time, f.time}
 ftime.age <- aggregate(data$f.time, list(data$age, data$map), mean)
-ggplot(ftime.age, aes(x=Group.1, y=x, colour=Group.2)) +
+age1 <- ggplot(ftime.age, aes(x=Group.1, y=x, colour=Group.2)) +
   geom_point(alpha=0.5) + 
-  geom_smooth(method="lm")
+  geom_smooth(method="lm") +
+  xlab("Age") + ylab("f.time")
 
 loc.err.age <- aggregate(data$loc.err, list(data$age, data$map), mean)
-ggplot(loc.err.age, aes(x=Group.1, y=x, colour=Group.2)) +
+age2 <- ggplot(loc.err.age, aes(x=Group.1, y=x, colour=Group.2)) +
   geom_point(alpha=0.5) + 
-  geom_smooth(method="lm")
+  geom_smooth(method="lm") +
+  xlab("Age") + ylab("Localisation Error")
 
 ttime.age <- aggregate(data$t.time, list(data$age, data$map), mean)
-ggplot(ttime.age, aes(x=Group.1, y=x, colour=Group.2)) +
+age3 <- ggplot(ttime.age, aes(x=Group.1, y=x, colour=Group.2)) +
   geom_point(alpha=0.5) + 
-  geom_smooth(method="lm")
+  geom_smooth(method="lm") +
+  xlab("Age") + ylab("t.time")
 
 dist.age <- aggregate(data$dist, list(data$age, data$map), mean)
-ggplot(dist.age, aes(x=Group.1, y=x, colour=Group.2)) +
+age4 <- ggplot(dist.age, aes(x=Group.1, y=x, colour=Group.2)) +
   geom_point(alpha=0.5) + 
-  geom_smooth(method="lm")
+  geom_smooth(method="lm") +
+  xlab("Age") + ylab("Typing Error")
+
+grid.arrange(age1, age2, age3, age4, ncol=2)  # arrange
+
+cor.test(ftime.age$Group.1, ftime.age$x)
+cor.test(loc.err.age$Group.1, loc.err.age$x)
+cor.test(ttime.age$Group.1, ttime.age$x)
+cor.test(dist.age$Group.1, dist.age$x)
 
 
 # Relation between country and {loc.err, dist, t.time, f.time}
-ggplot(data, aes(nationality, loc.err)) +
-  geom_boxplot() + coord_flip()
+gg1 <- ggplot(data, aes(nationality, loc.err)) +
+  geom_boxplot() + coord_flip() +
+  labs(title="Localisation error per country")
 
-ggplot(data, aes(nationality, dist)) +
-  geom_boxplot() + coord_flip()
+gg2 <- ggplot(data, aes(nationality, dist)) +
+  geom_boxplot() + coord_flip() +
+  labs(title="Typing error per country")
 
-ggplot(data, aes(nationality, t.time)) +
-  geom_boxplot() + coord_flip()
+gg3 <- ggplot(data, aes(nationality, t.time)) +
+  geom_boxplot() + coord_flip() +
+  labs(title="Typing time (t.time) per country")
 
-ggplot(data, aes(nationality, f.time)) +
-  geom_boxplot() + coord_flip()
+gg4 <- ggplot(data, aes(nationality, f.time)) +
+  geom_boxplot() + coord_flip() +
+  labs(title="Localisation time (f.time) per country")
+
+grid.arrange(gg4, gg3, gg1, gg2, ncol=2)  # arrange
+
+
+
 
 # Relation between gender and speed
-ggplot(data, aes(gender, loc.err, colour=map)) +
-  geom_boxplot()
+gg5 <- ggplot(data, aes(gender, loc.err, colour=map)) +
+  geom_boxplot() +
+  labs(title="Localisation error per gender")
 
-ggplot(data, aes(gender, dist, colour=map)) +
-  geom_boxplot()
+gg6 <- ggplot(data, aes(gender, dist, colour=map)) +
+  geom_boxplot() +
+  labs(title="Typing error per gender")
 
-ggplot(data, aes(gender, t.time, colour=map)) +
-  geom_boxplot()
+gg7 <- ggplot(data, aes(gender, t.time, colour=map)) +
+  geom_boxplot() +
+  labs(title="Typing time (t.time) per gender")
 
-ggplot(data, aes(gender, f.time, colour=map)) +
-  geom_boxplot()
+gg8 <- ggplot(data, aes(gender, f.time, colour=map)) +
+  geom_boxplot() +
+  labs(title="Localisation time (f.time) per gender")
+
+grid.arrange(gg8, gg7, gg5, gg6, ncol=2)  # arrange
 
 
 # Learning: f.time
@@ -375,13 +390,13 @@ cor.test(subset(dist.learn, Group.2 == "MapB")$Group.1, subset(dist.learn, Group
 
 
 # Strength of learning-effect
-ggplot(data, aes(map, f.time)) +
+le1 <- ggplot(data, aes(map, f.time)) +
   geom_boxplot(aes(colour=learned), alpha=0.5)
 
 t.test(subset(data, learned==FALSE & map=="MapA")$f.time, subset(data, learned==TRUE & map=="MapA")$f.time)
 t.test(subset(data, learned==FALSE & map=="MapB")$f.time, subset(data, learned==TRUE & map=="MapB")$f.time)
 
-ggplot(data, aes(map, loc.err)) +
+le2 <- ggplot(data, aes(map, loc.err)) +
   geom_boxplot(aes(colour=learned), alpha=0.5)
 
 mean(subset(data, learned==FALSE & map=="MapA")$loc.err)
@@ -391,13 +406,13 @@ mean(subset(data, learned==TRUE & map=="MapB")$loc.err)
 wilcox.test(subset(data, learned==FALSE & map=="MapA")$loc.err, subset(data, learned==TRUE & map=="MapA")$loc.err)
 wilcox.test(subset(data, learned==FALSE & map=="MapB")$loc.err, subset(data, learned==TRUE & map=="MapB")$loc.err)
 
-ggplot(data, aes(map, t.time)) +
+le3 <- ggplot(data, aes(map, t.time)) +
   geom_boxplot(aes(colour=learned), alpha=0.5)
 
 t.test(subset(data, learned==FALSE & map=="MapA")$t.time, subset(data, learned==TRUE & map=="MapA")$t.time)
 t.test(subset(data, learned==FALSE & map=="MapB")$t.time, subset(data, learned==TRUE & map=="MapB")$t.time)
 
-ggplot(data, aes(map, dist)) +
+le4 <- ggplot(data, aes(map, dist)) +
   geom_boxplot(aes(colour=learned), alpha=0.5)
 
 mean(subset(data, learned==FALSE & map=="MapA")$dist)
@@ -406,3 +421,5 @@ mean(subset(data, learned==FALSE & map=="MapB")$dist)
 mean(subset(data, learned==TRUE & map=="MapB")$dist)
 wilcox.test(subset(data, learned==FALSE & map=="MapA")$dist, subset(data, learned==TRUE & map=="MapA")$dist)
 wilcox.test(subset(data, learned==FALSE & map=="MapB")$dist, subset(data, learned==TRUE & map=="MapB")$dist)
+
+grid.arrange(le1, le2, le3, le4, ncol=2)
