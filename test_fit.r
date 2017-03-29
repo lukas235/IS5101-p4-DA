@@ -8,8 +8,8 @@ z <- rnorm(n=2000,m=10,sd=2)
 # xout <- transform(xout, cumFreq = cumsum(Freq), relative = prop.table(Freq))
 # xd <- table(factorx)
 
-x   <- seq(5,15,length=1000)
-y   <- dnorm(x,mean=10, sd=3)
+x   <- seq(1:max(data$fid))
+y   <- 
 plot(x,y, type="l", lwd=1)
 
 

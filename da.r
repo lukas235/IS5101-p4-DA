@@ -54,12 +54,13 @@ lbls <- paste(lbls,"%",sep="") # ad % to labels
 pie(slices,labels = lbls) # main="Gender distribution"
 
 # Calculate age mean, sd, range, bandwidth and plot of age
-age <- mean(subset(data, fid == 1 & map == 'MapA')$age)
-age_md <- median(subset(data, fid == 1 & map == 'MapA')$age)
-age_sd <- sd(subset(data, fid == 1 & map == 'MapA')$age)
-age_range <-range(subset(data, fid == 1 & map == 'MapA')$age)
-age_diff = age_range[2] - age_range[1]
-hist(subset(data, fid == 1 & map == 'MapA')$age, xlab="Age (years)", ylab="Count", breaks = 30, col = "grey", main="Age distribution")
+mean(subset(data, fid == 1 & map == 'MapA')$age)
+median(subset(data, fid == 1 & map == 'MapA')$age)
+sd(subset(data, fid == 1 & map == 'MapA')$age)
+range(subset(data, fid == 1 & map == 'MapA')$age)
+ggplot(subset(data, fid == 1 & map == 'MapA'), aes(age)) +
+  geom_histogram(alpha=0.5,position='identity',binwidth=1, colour="black") +
+  xlab("Participants' Age") + ylab("Count")
 
 
 # Nationalities
@@ -207,48 +208,106 @@ median(mapb$dist)
 
 
 ## Correlation between times
-ggplot(data, aes(data$f.time, data$t.time, colour=data$map)) +
+times.avg <- aggregate(data$t.time, list(data$pid), mean)
+times.tmp <- aggregate(data$f.time, list(data$pid), mean)
+times.avg['y'] <- times.tmp$x
+times.avg <- cbind(times.avg, times.tmp$x)
+
+ggplot(times.avg, aes(times.avg$x, times.avg$y)) +
   geom_point() +
   geom_smooth(method = "lm")
 
-# cor.test(data$f.time,data$t.time)
-cor.test(mapa$f.time,mapa$t.time)
-cor.test(mapb$f.time,mapb$t.time)
+cor.test(times.avg$x, times.avg$y)
+
+# ggplot(data, aes(data$f.time, data$t.time, colour=data$map)) +
+#   geom_point() +
+#   geom_smooth(method = "lm")
+# 
+# # cor.test(data$f.time,data$t.time)
+# cor.test(mapa$f.time,mapa$t.time)
+# cor.test(mapb$f.time,mapb$t.time)
 
 ## Correlation between errors
-ggplot(data, aes(data$dist, data$loc.err, colour=data$map)) +
+errors.avg <- aggregate(data$loc.err, list(data$pid), mean)
+errors.tmp <- aggregate(data$dist, list(data$pid), mean)
+errors.avg['y'] <- errors.tmp$x
+errors.avg <- cbind(errors.avg, errors.tmp$x)
+
+ggplot(errors.avg, aes(errors.avg$x, errors.avg$y)) +
   geom_point() +
   geom_smooth(method = "lm")
 
-# cor.test(data$f.time,data$t.time)
-cor.test(mapa$loc.err,mapa$dist)
-cor.test(mapb$loc.err,mapb$dist)
+cor.test(errors.avg$x, errors.avg$y)
+
+# ggplot(data, aes(data$dist, data$loc.err, colour=data$map)) +
+#   geom_point() +
+#   geom_smooth(method = "lm")
+# 
+# # cor.test(data$f.time,data$t.time)
+# cor.test(mapa$loc.err,mapa$dist)
+# cor.test(mapb$loc.err,mapb$dist)
 
 
-## Correlations between time and error
-ggplot(data, aes(x=f.time, y=loc.err, colour=map)) +
-  geom_point(alpha=0.5) +
+## Correlations between avg time and error per participant
+floc.avg <- aggregate(data$f.time, list(data$pid), mean)
+floc.tmp <- aggregate(data$loc.err, list(data$pid), mean)
+floc.avg['y'] <- floc.tmp$x
+floc.avg <- cbind(floc.avg, floc.tmp$x)
+
+ggplot(floc.avg, aes(x=floc.avg$x, y=floc.avg$y)) +
+  geom_point() +
   geom_smooth(method = "lm")
 
-ggplot(data, aes(x=t.time, y=dist, colour=map)) +
-  geom_point(alpha=0.5) +
+cor.test(floc.avg$x, floc.avg$y)
+
+
+tdist.avg <- aggregate(data$t.time, list(data$pid), mean)
+tdist.tmp <- aggregate(data$dist, list(data$pid), mean)
+tdist.avg['y'] <- tdist.tmp$x
+tdist.avg <- cbind(tdist.avg, tdist.tmp$x)
+
+ggplot(tdist.avg, aes(tdist.avg$x, tdist.avg$y)) +
+  geom_point() +
   geom_smooth(method = "lm")
 
-cor.test(mapa$f.time, mapa$loc.err)
-cor.test(mapb$f.time, mapb$loc.err)
+cor.test(tdist.avg$x, tdist.avg$y)
 
-cor.test(mapa$t.time, mapa$dist)
-cor.test(mapb$t.time, mapb$dist)
+
+# ggplot(data, aes(x=f.time, y=loc.err, colour=map)) +
+#   geom_point(alpha=0.5) +
+#   geom_smooth(method = "lm")
+# 
+# ggplot(data, aes(x=t.time, y=dist, colour=map)) +
+#   geom_point(alpha=0.5) +
+#   geom_smooth(method = "lm")
+# 
+# cor.test(mapa$f.time, mapa$loc.err)
+# cor.test(mapb$f.time, mapb$loc.err)
+# 
+# cor.test(mapa$t.time, mapa$dist)
+# cor.test(mapb$t.time, mapb$dist)
 
 # Relations between age and {loc.err, dist, t.time, f.time}
-ggplot(data, aes(x=age, y=loc.err)) +
-  geom_point(aes(group=map,colour=map,fill=map), alpha=0.5)
+ftime.age <- aggregate(data$f.time, list(data$age, data$map), mean)
+ggplot(ftime.age, aes(x=Group.1, y=x, colour=Group.2)) +
+  geom_point(alpha=0.5) + 
+  geom_smooth(method="lm")
 
-cor(data$age, data$loc.err)
-cor(data$age, data$dist)
+loc.err.age <- aggregate(data$loc.err, list(data$age, data$map), mean)
+ggplot(loc.err.age, aes(x=Group.1, y=x, colour=Group.2)) +
+  geom_point(alpha=0.5) + 
+  geom_smooth(method="lm")
 
-cor(data$age, data$t.time)
-cor(data$age, data$f.time)
+ttime.age <- aggregate(data$t.time, list(data$age, data$map), mean)
+ggplot(ttime.age, aes(x=Group.1, y=x, colour=Group.2)) +
+  geom_point(alpha=0.5) + 
+  geom_smooth(method="lm")
+
+dist.age <- aggregate(data$dist, list(data$age, data$map), mean)
+ggplot(dist.age, aes(x=Group.1, y=x, colour=Group.2)) +
+  geom_point(alpha=0.5) + 
+  geom_smooth(method="lm")
+
 
 # Relation between country and {loc.err, dist, t.time, f.time}
 ggplot(data, aes(nationality, loc.err)) +
@@ -277,33 +336,73 @@ ggplot(data, aes(gender, f.time, colour=map)) +
   geom_boxplot()
 
 
-# aggregate(data$f.time, list(data$fid), mean)
-ttt <- aggregate(data$f.time, list(data$fid, data$map), mean)
-
-# ggplot(ttt, aes(Group.1, x)) +
-#   geom_line(aes(group=ttt$Group.2, colour=ttt$Group.2)) + 
-#   geom_smooth(method = "lm", group=ttt$Group.2, colour=ttt$Group.2)
-
-ggplot(ttt, aes(Group.1, x, colour = Group.2)) +
+# Learning: f.time
+ftime.learn <- aggregate(data$f.time, list(data$fid, data$map), mean)
+ggplot(ftime.learn, aes(Group.1, x, colour = Group.2)) +
   geom_point() +
   geom_smooth(se = FALSE, method = "lm")
 
+cor.test(subset(ftime.learn, Group.2 == "MapA")$Group.1, subset(ftime.learn, Group.2 == "MapA")$x)
+cor.test(subset(ftime.learn, Group.2 == "MapB")$Group.1, subset(ftime.learn, Group.2 == "MapB")$x)
 
-# ggplot(data, aes(x=fid, y=mean() +
-#   geom_point(aes(group=map,colour=map), alpha=0.2)
+# Learning: loc.err
+loc.err.learn <- aggregate(data$loc.err, list(data$fid, data$map), mean)
+ggplot(loc.err.learn, aes(Group.1, x, colour = Group.2)) +
+  geom_point() +
+  geom_smooth(se = FALSE, method = "lm")
+
+cor.test(subset(loc.err.learn, Group.2 == "MapA")$Group.1, subset(loc.err.learn, Group.2 == "MapA")$x)
+cor.test(subset(loc.err.learn, Group.2 == "MapB")$Group.1, subset(loc.err.learn, Group.2 == "MapB")$x)
+
+# Learning: t.time
+ttime.learn <- aggregate(data$t.time, list(data$fid, data$map), mean)
+ggplot(ttime.learn, aes(Group.1, x, colour = Group.2)) +
+  geom_point() +
+  geom_smooth(se = FALSE, method = "lm")
+
+cor.test(subset(ttime.learn, Group.2 == "MapA")$Group.1, subset(ttime.learn, Group.2 == "MapA")$x)
+cor.test(subset(ttime.learn, Group.2 == "MapB")$Group.1, subset(ttime.learn, Group.2 == "MapB")$x)
+
+# Learning: dist
+dist.learn <- aggregate(data$dist, list(data$fid, data$map), mean)
+ggplot(dist.learn, aes(Group.1, x, colour = Group.2)) +
+  geom_point() +
+  geom_smooth(se = FALSE, method = "lm")
+
+cor.test(subset(dist.learn, Group.2 == "MapA")$Group.1, subset(dist.learn, Group.2 == "MapA")$x)
+cor.test(subset(dist.learn, Group.2 == "MapB")$Group.1, subset(dist.learn, Group.2 == "MapB")$x)
 
 
 
 # Strength of learning-effect
+ggplot(data, aes(map, f.time)) +
+  geom_boxplot(aes(colour=learned), alpha=0.5)
+
+t.test(subset(data, learned==FALSE & map=="MapA")$f.time, subset(data, learned==TRUE & map=="MapA")$f.time)
+t.test(subset(data, learned==FALSE & map=="MapB")$f.time, subset(data, learned==TRUE & map=="MapB")$f.time)
+
 ggplot(data, aes(map, loc.err)) +
   geom_boxplot(aes(colour=learned), alpha=0.5)
 
-ggplot(data, aes(map, dist)) +
-  geom_boxplot(aes(colour=learned), alpha=0.5)
+mean(subset(data, learned==FALSE & map=="MapA")$loc.err)
+mean(subset(data, learned==TRUE & map=="MapA")$loc.err)
+mean(subset(data, learned==FALSE & map=="MapB")$loc.err)
+mean(subset(data, learned==TRUE & map=="MapB")$loc.err)
+wilcox.test(subset(data, learned==FALSE & map=="MapA")$loc.err, subset(data, learned==TRUE & map=="MapA")$loc.err)
+wilcox.test(subset(data, learned==FALSE & map=="MapB")$loc.err, subset(data, learned==TRUE & map=="MapB")$loc.err)
 
 ggplot(data, aes(map, t.time)) +
   geom_boxplot(aes(colour=learned), alpha=0.5)
 
-ggplot(data, aes(map, f.time)) +
+t.test(subset(data, learned==FALSE & map=="MapA")$t.time, subset(data, learned==TRUE & map=="MapA")$t.time)
+t.test(subset(data, learned==FALSE & map=="MapB")$t.time, subset(data, learned==TRUE & map=="MapB")$t.time)
+
+ggplot(data, aes(map, dist)) +
   geom_boxplot(aes(colour=learned), alpha=0.5)
 
+mean(subset(data, learned==FALSE & map=="MapA")$dist)
+mean(subset(data, learned==TRUE & map=="MapA")$dist)
+mean(subset(data, learned==FALSE & map=="MapB")$dist)
+mean(subset(data, learned==TRUE & map=="MapB")$dist)
+wilcox.test(subset(data, learned==FALSE & map=="MapA")$dist, subset(data, learned==TRUE & map=="MapA")$dist)
+wilcox.test(subset(data, learned==FALSE & map=="MapB")$dist, subset(data, learned==TRUE & map=="MapB")$dist)
